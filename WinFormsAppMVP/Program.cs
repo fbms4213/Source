@@ -15,6 +15,8 @@ static class Program
         IMainView _view = new MainView();
         IAddView _addView = new AddView();
 
+
+        new AddPresenter(_addView);
         new MainPresenter(_view, _addView);
 
         Application.Run((Form)_view);

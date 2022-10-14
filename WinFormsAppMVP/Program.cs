@@ -13,10 +13,10 @@ static class Program
         // Dependency Injection (Unity, Ninject, Autofac)
 
         IMainView _view = new MainView();
-        IAddView _addView = new AddView();
+        IAddUpdateView _addView = new AddUpdateView();
 
 
-        new AddPresenter(_addView);
+        new AddUpdatePresenter(_addView);
         new MainPresenter(_view, _addView);
 
         Application.Run((Form)_view);

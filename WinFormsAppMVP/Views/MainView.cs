@@ -27,7 +27,6 @@ public partial class MainView : Form, IMainView
     public event EventHandler? DeleteEvent;
 
 
-
     public void SetStudentListBindingSource(BindingSource source)
     {
         lBox_students.DataSource = null;
@@ -44,8 +43,11 @@ public partial class MainView : Form, IMainView
     private void btn_delete_Click(object sender, EventArgs e)
         => DeleteEvent?.Invoke(this, EventArgs.Empty);
 
+
     private void btn_add_Click(object sender, EventArgs e)
         => AddEvent?.Invoke(this, EventArgs.Empty);
 
 
+    private void btn_update_Click(object sender, EventArgs e)
+        => UpdateEvent?.Invoke(sender, e);
 }

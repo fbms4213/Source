@@ -1,31 +1,28 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using WinFormsAppMVP.Models;
+﻿using WinFormsAppMVP.Models;
 using WinFormsAppMVP.Views;
+
+
 
 namespace WinFormsAppMVP.Presenters;
 
 public class MainPresenter
 {
     private IMainView _view;
-    private IAddView _addView;
+    private IAddUpdateView _addUpdateView;
 
     private BindingSource _bindingSource;
     private List<Student> _students;
 
-    public MainPresenter(IMainView view, IAddView addView)
+    public MainPresenter(IMainView view, IAddUpdateView addView)
     {
         _view = view;
-        _addView = addView;
+        _addUpdateView = addView;
 
 
         _students = new List<Student>(){
-            new Student("Vasif", "Babazade", new DateOnly(2004, 2, 10), 9.6f),
-            new Student("Emin", "Novruz", new DateOnly(2007, 9, 5), 10.5f),
-            new Student("Resul", "Qasimov", new DateOnly(2006, 2, 23), 11.2f),
+            new Student("Vasif", "Babazade", new DateTime(2004, 2, 10), 9.6f),
+            new Student("Emin", "Novruz", new DateTime(2002, 9, 5), 10.5f),
+            new Student("Resul", "Qasimov", new DateTime(2003, 2, 23), 11.2f),
         };
 
 
@@ -34,46 +31,86 @@ public class MainPresenter
         _view.SetStudentListBindingSource(_bindingSource);
 
 
-        _view.SearchEvent += _view_SearchEvent;
-        _view.DeleteEvent += _view_DeleteEvent;
-        _view.AddEvent += _view_AddEvent;
+        _view.SearchEvent += View_SearchEvent;
+        _view.DeleteEvent += View_DeleteEvent;
+        _view.AddEvent += View_AddEvent;
+        _view.UpdateEvent += View_UpdateEvent;
     }
 
-    
 
-    private void _view_SearchEvent(object? sender, EventArgs e)
+
+    private void View_SearchEvent(object? sender, EventArgs e)
     {
         if (!string.IsNullOrWhiteSpace(_view.SearchValue))
             _bindingSource.DataSource = _students
-                .Where(s => s.FirstName.ToUpper().Contains(_view.SearchValue.ToUpper())).ToList();
+                .Where(s => s.FirstName.Contains(_view.SearchValue, StringComparison.OrdinalIgnoreCase))
+                .ToList();
         else
             _bindingSource.DataSource = _students;
-
-
-        _view.SetStudentListBindingSource(_bindingSource);
     }
 
-    private void _view_DeleteEvent(object? sender, EventArgs e)
+
+    private void View_DeleteEvent(object? sender, EventArgs e)
     {
         var current = _bindingSource.Current;
 
-        if (current is not null)
+        if (current is null)
         {
-            _students.Remove((Student)current);
-            _view.SetStudentListBindingSource(_bindingSource);
+            MessageBox.Show("An error occured", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            return;
         }
+
+
+        _bindingSource.RemoveCurrent();
     }
 
-    private void _view_AddEvent(object? sender, EventArgs e)
+
+    private void View_AddEvent(object? sender, EventArgs e)
     {
-        var result = ((Form)_addView).ShowDialog();
+        var result = _addUpdateView.ShowDialog();
 
         if (result == DialogResult.Cancel)
             return;
 
 
-        var newStudent = new Student(_addView.FirstName, _addView.LastName, _addView.BirthOfDate, _addView.Score);
-        _students.Add(newStudent);
-        _view.SetStudentListBindingSource(_bindingSource);
+        var newStudent = new Student(_addUpdateView.FirstName, _addUpdateView.LastName, _addUpdateView.BirthOfDate, (float)_addUpdateView.Score);
+       
+        // _students.Add(newStudent);
+        _bindingSource.Add(newStudent);
+        MessageBox.Show("Successfully added", "Information", MessageBoxButtons.OK, MessageBoxIcon.Information);
+    }
+
+
+    private void View_UpdateEvent(object? sender, EventArgs e)
+    {
+
+        var current = _bindingSource.Current as Student;
+
+        if (current is null)
+        {
+            MessageBox.Show("An error occured", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            return;
+        }
+
+
+
+        _addUpdateView.FirstName = current.FirstName;
+        _addUpdateView.LastName = current.LastName;
+        _addUpdateView.BirthOfDate = current.BirthOfDate;
+        _addUpdateView.Score = (decimal)current.Score;
+
+
+        if (_addUpdateView.ShowDialog() == DialogResult.Cancel)
+            return;
+
+
+        current.FirstName = _addUpdateView.FirstName;
+        current.LastName = _addUpdateView.LastName;
+        current.BirthOfDate = _addUpdateView.BirthOfDate;
+        current.Score = (float)_addUpdateView.Score;
+
+
+        _bindingSource.ResetCurrentItem();
+        MessageBox.Show("Successfully updated", "Information", MessageBoxButtons.OK, MessageBoxIcon.Information);
     }
 }

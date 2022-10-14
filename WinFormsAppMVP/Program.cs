@@ -1,4 +1,5 @@
 using WinFormsAppMVP.Presenters;
+using WinFormsAppMVP.Repositories;
 using WinFormsAppMVP.Views;
 
 namespace WinFormsAppMVP;
@@ -12,13 +13,14 @@ static class Program
 
         // Dependency Injection (Unity, Ninject, Autofac)
 
-        IMainView _view = new MainView();
-        IAddUpdateView _addView = new AddUpdateView();
+        IMainView view = new MainView();
+        IAddUpdateView addView = new AddUpdateView();
+        IStudentRepository repository = new EFStudentRepository();
 
 
-        new AddUpdatePresenter(_addView);
-        new MainPresenter(_view, _addView);
+        new AddUpdatePresenter(addView);
+        new MainPresenter(view, addView, repository);
 
-        Application.Run((Form)_view);
+        Application.Run((Form)view);
     }
 }

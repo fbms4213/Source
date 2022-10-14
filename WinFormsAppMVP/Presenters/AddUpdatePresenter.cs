@@ -11,12 +11,12 @@ public class AddUpdatePresenter
     {
         _view = view;
 
-        _view.SaveEvent += _view_SaveEvent;
-        _view.CancelEvent += _view_CancelEvent; ;
+        _view.SaveEvent += View_SaveEvent;
+        _view.CancelEvent += View_CancelEvent; ;
     }
 
 
-    private void _view_SaveEvent(object? sender, EventArgs e)
+    private void View_SaveEvent(object? sender, EventArgs e)
     {
         StringBuilder sb = new();
 
@@ -44,7 +44,7 @@ public class AddUpdatePresenter
         _view.DialogResult = DialogResult.OK;
     }
 
-    private void _view_CancelEvent(object? sender, EventArgs e)
+    private void View_CancelEvent(object? sender, EventArgs e)
     {
         _view.DialogResult = DialogResult.Cancel;
     }

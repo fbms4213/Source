@@ -1,4 +1,5 @@
 ﻿using WinFormsAppMVP.Models;
+using WinFormsAppMVP.Repositories;
 using WinFormsAppMVP.Views;
 
 
@@ -7,27 +8,25 @@ namespace WinFormsAppMVP.Presenters;
 
 public class MainPresenter
 {
-    private IMainView _view;
-    private IAddUpdateView _addUpdateView;
+    private readonly IMainView _view;
+    private readonly IAddUpdateView _addUpdateView;
+    private readonly IStudentRepository _repository;
 
-    private BindingSource _bindingSource;
-    private List<Student> _students;
 
-    public MainPresenter(IMainView view, IAddUpdateView addView)
+    private readonly BindingSource _bindingSource;
+
+
+
+    public MainPresenter(IMainView view, IAddUpdateView addView, IStudentRepository repository)
     {
         _view = view;
         _addUpdateView = addView;
+        _repository = repository;
 
-
-        _students = new List<Student>(){
-            new Student("Vasif", "Babazade", new DateTime(2004, 2, 10), 9.6f),
-            new Student("Emin", "Novruz", new DateTime(2002, 9, 5), 10.5f),
-            new Student("Resul", "Qasimov", new DateTime(2003, 2, 23), 11.2f),
-        };
 
 
         _bindingSource = new BindingSource();
-        _bindingSource.DataSource = _students;
+        _bindingSource.DataSource = _repository.GetList();
         _view.SetStudentListBindingSource(_bindingSource);
 
 
@@ -41,18 +40,24 @@ public class MainPresenter
 
     private void View_SearchEvent(object? sender, EventArgs e)
     {
-        if (!string.IsNullOrWhiteSpace(_view.SearchValue))
-            _bindingSource.DataSource = _students
-                .Where(s => s.FirstName.Contains(_view.SearchValue, StringComparison.OrdinalIgnoreCase))
-                .ToList();
-        else
-            _bindingSource.DataSource = _students;
+
+        bool isNullOrWhiteSpace = string.IsNullOrWhiteSpace(_view.SearchValue);
+
+        _bindingSource.DataSource = isNullOrWhiteSpace switch
+        {
+            true => _bindingSource.DataSource = _repository.GetList(),
+
+            false => _repository.GetList(s =>
+            s.FirstName.Contains(_view.SearchValue, StringComparison.OrdinalIgnoreCase)
+            ||
+            s.LastName.Contains(_view.SearchValue, StringComparison.OrdinalIgnoreCase))
+        };
     }
 
 
     private void View_DeleteEvent(object? sender, EventArgs e)
     {
-        var current = _bindingSource.Current;
+        var current = _bindingSource.Current as Student;
 
         if (current is null)
         {
@@ -61,6 +66,7 @@ public class MainPresenter
         }
 
 
+        _repository.Remove(current);
         _bindingSource.RemoveCurrent();
     }
 
@@ -74,9 +80,10 @@ public class MainPresenter
 
 
         var newStudent = new Student(_addUpdateView.FirstName, _addUpdateView.LastName, _addUpdateView.BirthOfDate, (float)_addUpdateView.Score);
-       
-        // _students.Add(newStudent);
+
+        _repository.Add(newStudent);
         _bindingSource.Add(newStudent);
+
         MessageBox.Show("Successfully added", "Information", MessageBoxButtons.OK, MessageBoxIcon.Information);
     }
 
@@ -110,6 +117,7 @@ public class MainPresenter
         current.Score = (float)_addUpdateView.Score;
 
 
+        _repository.Update(current);
         _bindingSource.ResetCurrentItem();
         MessageBox.Show("Successfully updated", "Information", MessageBoxButtons.OK, MessageBoxIcon.Information);
     }
